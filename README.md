@@ -1,0 +1,1 @@
+picotool.exe reboot -f -u
