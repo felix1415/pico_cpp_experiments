@@ -31,13 +31,17 @@ project(pico_experiments C CXX ASM)
 pico_sdk_init()
 
 add_subdirectory(pwm)
+add_subdirectory(button)
+add_subdirectory(programs)
 
 if (TARGET tinyusb_device)
     add_executable(pico_experiments
             main.cpp
             )
 
-    target_link_libraries(pico_experiments pwm)
+    target_compile_options(pico_experiments PUBLIC -fno-rtti)
+    
+    target_link_libraries(pico_experiments pwm button programs)
 
     # enable usb output, disable uart output
     pico_enable_stdio_usb(pico_experiments 1)

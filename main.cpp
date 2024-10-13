@@ -10,54 +10,7 @@
 #include "hardware/gpio.h"
 
 #include <pwm_pin.hpp>
-
-// #ifndef LED_DELAY_MS
-// #define LED_DELAY_MS 250
-// #endif
-
-// Initialize the GPIO for the LED
-// void pico_led_init(void) {
-// #ifdef PICO_DEFAULT_LED_PIN
-//     // A device like Pico that uses a GPIO for the LED will define PICO_DEFAULT_LED_PIN
-//     // so we can use normal GPIO functionality to turn the led on and off
-//     gpio_init(PICO_DEFAULT_LED_PIN);
-//     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-// #endif
-// }
-
-// // Turn the LED on or off
-// void pico_set_led(bool led_on) {
-// #if defined(PICO_DEFAULT_LED_PIN)
-//     // Just set the GPIO on or off
-//     gpio_put(PICO_DEFAULT_LED_PIN, led_on);
-// #endif
-// }
-
-// void on_pwm_wrap() {
-//     static int fade = 0;
-//     static bool going_up = true;
-//     // Clear the interrupt flag that brought us here
-//     pwm_clear_irq(pwm_gpio_to_slice_num(PICO_DEFAULT_LED_PIN));
-
-//     if (going_up) {
-//         ++fade;
-//         if (fade > 255) {
-//             fade = 255;
-//             going_up = false;
-//         }
-//     } else {
-//         --fade;
-//         if (fade < 0) {
-//             fade = 0;
-//             going_up = true;
-//         }
-//     }
-//     // Square the fade value to make the LED's brightness appear more linear
-//     // Note this range matches with the wrap value
-//     pwm_set_gpio_level(PICO_DEFAULT_LED_PIN, fade * fade);
-// }
-
-#define BUTTON_PIN 16
+#include <button.hpp>
 
 int main() {
     stdio_init_all();
@@ -73,36 +26,47 @@ int main() {
     PWMPin pin_9 = PWMPin(6);
 
     std::uint16_t level = 0;
-
-    bool button_value = false;
+    Button b1(16, 200000);
+    Button b2(17, 200000);
+    bool digital_mode = false;
     bool power_value = false;
-    gpio_init(BUTTON_PIN);
-    gpio_set_dir(BUTTON_PIN, GPIO_IN);
-    gpio_pull_up(BUTTON_PIN);
+    bool sticky_value = false;
 
-    sleep_us(200000);
+    std::uint64_t  digitalModeDuration = 1000000;
+    std::uint64_t  lastSwitchTime = 0;
 
     while (true) {
 
-        if(!gpio_get(BUTTON_PIN))
+        if(b1.getValue())
         {
-            printf("button pressed\n");
-            button_value = !button_value;
-            sleep_us(200000);
+            digital_mode = !digital_mode;
+            lastSwitchTime = time_us_64();
         }
 
-        if(button_value)
+        if(b2.getValue())
         {
-            if(power_value)
+            sticky_value = !sticky_value;
+        }
+        
+
+        if(!sticky_value && digital_mode)
+        {
+            if(time_us_64() < lastSwitchTime + digitalModeDuration)
             {
-                level = 65535;
+                if(power_value)
+                {
+                    level = 65535;
+                }
+                else
+                {
+                    level = 0;
+                }
             }
             else
             {
-                level = 0;
+                power_value = !power_value;
+                lastSwitchTime = time_us_64();
             }
-            power_value = !power_value;
-            sleep_us(2000000);
         }
 
         led_pin.setValue(level);
@@ -115,7 +79,7 @@ int main() {
         pin_6.setValue(level);
         pin_9.setValue(level);
 
-        if(button_value)
+        if(digital_mode)
         {
             continue;
         }
@@ -128,63 +92,7 @@ int main() {
             printf("Hello, world reset!\n");
             level = 0;
         }
-        // pico_set_led(led_on = !led_on);
+        
         sleep_us(20);
     }
 }
-
-
-
-// tu = TimeUtils(timeout=10)
-// timer = Timer()
-
-// potentiometer = ADC(Pin(26))
-// pwm = PWM(Pin(1), freq=1000)
-// led_pwm = PWM(Pin(25), freq=1000)
-// print(pwm)
-
-
-// def flash_led(led, good=False):
-//     count = 0
-//     while True:
-//         led.toggle()
-//         time.sleep(0.04)
-//         count += 1
-//         if count > 10 and not good:
-//             led.on()
-//             time.sleep(2)
-//             break
-//         else:
-//             break
-
-// def blink_led(led):
-//     count = 0
-//     while True:
-//         led.toggle()
-//         time.sleep(0.4)
-//         count += 1
-//         if count > 20:
-//             led.value = True
-//             break
-
-
-// MAX_DUTY = (2 ** 16) - 1
-
-// led = Pin(21, Pin.OUT)
-
-
-// while True:
-//     # for duty in range(65025):
-//     #     led_pwm.duty_u16(duty)
-//     #     time.sleep(0.0001)
-//     # for duty in range(65025, 0, -1):
-//     #     led_pwm.duty_u16(duty)
-//     #     time.sleep(0.0001)
-
-//     time.sleep(0.1)
-//     # led.toggle()
-
-//     duty_val = potentiometer.read_u16()
-//     pwm.duty_u16(duty_val)
-//     led_pwm.duty_u16(duty_val)
-//     print(str(pwm.duty_u16()))

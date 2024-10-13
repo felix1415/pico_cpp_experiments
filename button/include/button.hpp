@@ -1,16 +1,17 @@
 #include <cstdint>
 
-class PWMPin
+class Button
 {
     public:
-        PWMPin(const std::uint16_t pin, const std::uint16_t value = 32767);
+        Button(const std::uint16_t pin, const std::uint64_t debounceDelay);
+        virtual ~Button() {}
 
-        void setDebounceValue(const std::uint16_t delay);
-        bool getValue();
+        void setDebounceDelay(const std::uint16_t debounceDelay);
+        virtual bool getValue();
 
     private:
         const std::uint16_t m_pinNumber;
-        std::uint16_t m_debounceDelay;
-        std::uint16_t m_lastDebounceTime;
+        std::uint64_t  m_debounceDelay;
+        std::uint64_t  m_lastDebounceTime;
 
 };

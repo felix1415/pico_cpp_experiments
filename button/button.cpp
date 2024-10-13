@@ -1,29 +1,39 @@
-#include "pwm_pin.hpp"
+#include "button.hpp"
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/pwm.h"
+#include "hardware/gpio.h"
 
-Button::Button(const std::uint16_t pin, const std::uint16_t value):
-m_pinNumber(pin)
+Button::Button(const std::uint16_t pin, const std::uint64_t debounceDelay):
+m_pinNumber(pin),
+m_debounceDelay(debounceDelay),
+m_lastDebounceTime(0)
 {
-    gpio_set_function(pin, GPIO_FUNC_PWM);
-
-    // Find out which PWM slice is connected to GPIO m_pinNumber
-    m_sliceNumber = pwm_gpio_to_slice_num(m_pinNumber);
-    m_channelNumber = pwm_gpio_to_channel(m_pinNumber);
-
-    pwm_set_wrap(m_sliceNumber, 65535);
-
-    pwm_set_chan_level(m_sliceNumber, m_channelNumber, 0);
-
-    pwm_set_enabled(m_sliceNumber, true);
-
-    setValue(value);
+    gpio_init(m_pinNumber);
+    gpio_set_dir(m_pinNumber, GPIO_IN);
+    gpio_pull_up(m_pinNumber);
 }
 
 bool Button::getValue()
 {
-    return false;
-    pwm_set_gpio_level(m_pinNumber, value);
+    if(m_lastDebounceTime > 0)
+    {
+        if(time_us_64() < m_lastDebounceTime + m_debounceDelay)
+        {
+            return false;
+        }
+    }
+
+    if (gpio_get(m_pinNumber))
+    {
+        return false;
+    }
+
+    m_lastDebounceTime = time_us_64();
+    return true;
+}
+
+void Button::setDebounceDelay(const std::uint16_t debounceDelay)
+{
+    m_debounceDelay = debounceDelay;
 }
