@@ -1,9 +1,13 @@
+#include <atomic>
+
 class Program
 {
-    Program();
-    virtual void run() = 0;
+    public:
+        Program() = default;
+        virtual ~Program() {}
+        virtual void run() = 0;
+        void stop() { mRunning.store(false); }
 
     protected:
-        virtual void setup() = 0;
-        virtual void teardown() = 0;
+        std::atomic<bool> mRunning {false};        
 };
