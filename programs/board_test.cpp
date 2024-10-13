@@ -3,6 +3,8 @@
 #include <pwm_pin.hpp>
 #include <button.hpp>
 
+#include <stdio.h>
+
 BoardTest::BoardTest()
 {
     stdio_init_all();
@@ -58,41 +60,45 @@ void BoardTest::run()
         if(stickyButton.getValue())
         {
             mStickyOn = !mStickyOn;
+            if(!mDigitalMode)
+            {
+                printf("mPWMLevel value: %d", mPWMLevel);
+            }
         }
 
-    if(!mStickyOn && mDigitalMode)
-    {
-        if(time_us_64() < mLastSwitchTime + mDigitalModeDuration)
+        if(!mStickyOn && mDigitalMode)
         {
-            if(mPinHigh)
+            if(time_us_64() < mLastSwitchTime + mDigitalModeDuration)
             {
-                mPWMLevel = 65535;
+                if(mPinHigh)
+                {
+                    mPWMLevel = 65535;
+                }
+                else
+                {
+                    mPWMLevel = 0;
+                }
             }
             else
             {
                 mPWMLevel = 0;
+                mPinHigh = !mPinHigh;
+                mLastSwitchTime = time_us_64();
             }
         }
-        else
+        else if(!mDigitalMode)
         {
-            mPWMLevel = 0;
-            mPinHigh = !mPinHigh;
-            mLastSwitchTime = time_us_64();
+            mPWMLevel++;
+
+            if(mPWMLevel == 65535)
+            {
+                mPWMLevel = 0;
+            }
         }
+
+        setLedPinLevels(mPWMLevel, mLedPins);
+        setLedPinLevels(mPWMLevel, mLPFPins);
+
+        sleep_us(50);
     }
-    else if(!mDigitalMode)
-    {
-        mPWMLevel++;
-
-        if(mPWMLevel == 65535)
-        {
-            mPWMLevel = 0;
-        }
-    }
-
-    setLedPinLevels(mPWMLevel, mLedPins);
-    setLedPinLevels(mPWMLevel, mLPFPins);
-
-    sleep_us(20);
-}
 }

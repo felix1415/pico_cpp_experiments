@@ -15,7 +15,6 @@ class BoardTest : public Program {
         void run() override;
 
     private:
-        // void setLedPinLevels(const std::uint16_t value);
         void setLedPinLevels(const std::uint16_t value, auto& pins);
 
         std::array <PWMPin*, 4> mLedPins;
