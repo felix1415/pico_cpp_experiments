@@ -46,25 +46,41 @@ void BoardTest::run()
 {
     mRunning.store(true);
 
-    Button digitalModeButton = Button(16, 200000);
-    Button stickyButton = Button(17, 200000);
+    Button digitalModeButton = Button(16);
+    Button stickyButton = Button(17);
     while (mRunning) {
 
-        if(digitalModeButton.getValue())
+        if(digitalModeButton.getState() == BUTTON_STATE::PRESS)
         {
             mDigitalMode = !mDigitalMode;
             mStickyOn = false;
             mLastSwitchTime = time_us_64();   
         }
 
-        if(stickyButton.getValue())
-        {
-            mStickyOn = !mStickyOn;
-            if(!mDigitalMode)
-            {
-                printf("mPWMLevel value: %d", mPWMLevel);
-            }
-        }
+        // if(digitalModeButton.getState() == BUTTON_STATE::HOLD)
+        // {
+        //     mDigitalMode = !mDigitalMode;
+        //     mStickyOn = false;
+        //     mLastSwitchTime = time_us_64();   
+        //     // printf("HOLD");
+        // }
+
+        // if(digitalModeButton.getState() == BUTTON_STATE::HOLDING)
+        // {
+        //     mDigitalMode = !mDigitalMode;
+        //     mStickyOn = false;
+        //     mLastSwitchTime = time_us_64();   
+        //     // printf("HOLDING\n");
+        // }
+
+        // if(stickyButton.getState() == BUTTON_STATE::PRESS)
+        // {
+        //     mStickyOn = !mStickyOn;
+        //     if(!mDigitalMode)
+        //     {
+        //         printf("mPWMLevel value: %d", mPWMLevel);
+        //     }
+        // }
 
         if(!mStickyOn && mDigitalMode)
         {
@@ -99,6 +115,6 @@ void BoardTest::run()
         setLedPinLevels(mPWMLevel, mLedPins);
         setLedPinLevels(mPWMLevel, mLPFPins);
 
-        sleep_us(50);
+        sleep_us(50000);
     }
 }
