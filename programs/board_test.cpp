@@ -57,30 +57,14 @@ void BoardTest::run()
             mLastSwitchTime = time_us_64();   
         }
 
-        // if(digitalModeButton.getState() == BUTTON_STATE::HOLD)
-        // {
-        //     mDigitalMode = !mDigitalMode;
-        //     mStickyOn = false;
-        //     mLastSwitchTime = time_us_64();   
-        //     // printf("HOLD");
-        // }
-
-        // if(digitalModeButton.getState() == BUTTON_STATE::HOLDING)
-        // {
-        //     mDigitalMode = !mDigitalMode;
-        //     mStickyOn = false;
-        //     mLastSwitchTime = time_us_64();   
-        //     // printf("HOLDING\n");
-        // }
-
-        // if(stickyButton.getState() == BUTTON_STATE::PRESS)
-        // {
-        //     mStickyOn = !mStickyOn;
-        //     if(!mDigitalMode)
-        //     {
-        //         printf("mPWMLevel value: %d", mPWMLevel);
-        //     }
-        // }
+        if(stickyButton.getState() == BUTTON_STATE::PRESS)
+        {
+            mStickyOn = !mStickyOn;
+            if(!mDigitalMode)
+            {
+                printf("mPWMLevel value: %d", mPWMLevel);
+            }
+        }
 
         if(!mStickyOn && mDigitalMode)
         {
