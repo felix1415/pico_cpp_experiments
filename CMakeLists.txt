@@ -30,7 +30,7 @@ project(pico_experiments C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-add_subdirectory(pwm)
+add_subdirectory(iopin)
 add_subdirectory(button)
 add_subdirectory(programs)
 
@@ -41,7 +41,7 @@ if (TARGET tinyusb_device)
 
     target_compile_options(pico_experiments PUBLIC -fno-rtti -fno-exceptions)
     
-    target_link_libraries(pico_experiments pwm button programs)
+    target_link_libraries(pico_experiments iopin button programs)
 
     # enable usb output, disable uart output
     pico_enable_stdio_usb(pico_experiments 1)
