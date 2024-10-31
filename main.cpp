@@ -9,8 +9,6 @@
 #include "hardware/pwm.h"
 #include "hardware/gpio.h"
 
-// #include <pwm_pin.hpp>
-// #include <button.hpp>
 #include <board_test.hpp>
 
 int main() {

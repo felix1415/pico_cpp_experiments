@@ -9,5 +9,5 @@ class Program
         void stop() { mRunning.store(false); }
 
     protected:
-        std::atomic<bool> mRunning {false};        
+        std::atomic<bool> mRunning {false};
 };

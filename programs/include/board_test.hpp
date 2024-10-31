@@ -3,10 +3,13 @@
 #include "pico/stdlib.h"
 
 #include <array>
+#include <vector>
+#include <memory>
 #include <cstdint>
 
-class PWMPin;
+class IOPin;
 class Button;
+class LedSet;
 
 class BoardTest : public Program {
     public:
@@ -17,8 +20,11 @@ class BoardTest : public Program {
     private:
         void setLedPinLevels(const std::uint16_t value, auto& pins);
 
-        std::array <PWMPin*, 4> mLedPins;
-        std::array <PWMPin*, 4> mLPFPins;
+        std::shared_ptr<LedSet> mLedSet;
+
+        std::shared_ptr<IOPin> mMainLed;
+        std::vector<std::shared_ptr<IOPin>> mLedPins;
+        std::array <std::shared_ptr<IOPin>, 4> mLPFPins;
 
         bool mDigitalMode {false};
         bool mStickyOn = {false};

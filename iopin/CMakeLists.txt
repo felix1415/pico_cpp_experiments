@@ -1,5 +1,6 @@
 add_library(iopin 
-    pwm_pin.cpp)
+    pwm_pin.cpp
+    led_set.cpp)
 
 # pull in common dependencies
 target_link_libraries(iopin pico_stdlib hardware_gpio hardware_pwm)

@@ -1,5 +1,8 @@
+#pragma once
+
+#include "io_pin.hpp"
+
 #include <cstdint>
-#include <io_pin.hpp>
 
 class PWMPin : public IOPin
 {

@@ -1,45 +1,53 @@
 #include <board_test.hpp>
 
-#include <pwm_pin.hpp>
-#include <button.hpp>
+#include "pwm_pin.hpp"
+#include "button.hpp"
+
+#include "led_set.hpp"
 
 #include <stdio.h>
+#include <iostream>
 
 BoardTest::BoardTest()
 {
     stdio_init_all();
 
-    mLedPins[0] = new PWMPin(PICO_DEFAULT_LED_PIN);
-    // mLedPins[1] = new PWMPin(18); //red
-    // mLedPins[2] = new PWMPin(19); //yellow
-    // mLedPins[3] = new PWMPin(20); //green
+    mMainLed = std::make_shared<PWMPin>(PICO_DEFAULT_LED_PIN);
+    // mLedSet = std::make_shared<LedSet>(mLedPins);
+    
+    // mLedPins[1] = std::make_shared<PWMPin>(18); //red
+    // mLedPins[2] = std::make_shared<PWMPin>(19); //yellow
+    // mLedPins[3] = std::make_shared<PWMPin>(20); //green
 
-    for (int i = 0; i < mLedPins.size() - 1; ++i) {
+    for (int i = 0; i < 3; ++i) {
         //18,19,20
-        mLedPins[i+1] = new PWMPin(18 + i);
+        mLedPins.push_back(std::make_shared<PWMPin>(18 + i));
     }
     for (int i = 0; i < mLPFPins.size(); ++i) {
         //0,2,4,6
-        mLPFPins[i] = new PWMPin(i*2);
+        mLPFPins[i] = std::make_shared<PWMPin>(i*2);
     }
+
+    mLedSet = std::make_shared<LedSet>(mLedPins);
 }
 
 BoardTest::~BoardTest()
 {
     for (int i = 0; i < mLedPins.size(); ++i) {
-        delete mLedPins[i];
+        mLedPins[i].reset();
     }
 
     for (int i = 0; i < mLPFPins.size(); ++i) {
-        delete mLPFPins[i];
+        mLPFPins[i].reset();
     }
 }
 
 void BoardTest::setLedPinLevels(const std::uint16_t value, auto& pins)
 {
-    for (int i = 0; i < pins.size(); ++i) {
-        pins[i]->setValue(value);
-    }
+    mMainLed->setValue(value);
+    // for (int i = 0; i < pins.size(); ++i) {
+    //     pins[i]->setValue(value);
+    // }
 }
 
 void BoardTest::run()
@@ -48,10 +56,21 @@ void BoardTest::run()
 
     Button digitalModeButton = Button(16);
     Button stickyButton = Button(17);
-    while (mRunning) {
 
+    std::uint8_t ledSetState = LedSetting::ALL_OFF;
+
+    while (mRunning) {
         if(digitalModeButton.getState() == BUTTON_STATE::PRESS)
         {
+            if(LedSetting::ALL_OFF != ledSetState)
+            {
+                ledSetState = LedSetting::ALL_OFF;
+            }
+            else if(LedSetting::ALL_ON != ledSetState)
+            {
+                ledSetState = LedSetting::ALL_ON;
+            }
+
             mDigitalMode = !mDigitalMode;
             mStickyOn = false;
             mLastSwitchTime = time_us_64();   
@@ -97,8 +116,9 @@ void BoardTest::run()
         }
 
         setLedPinLevels(mPWMLevel, mLedPins);
-        setLedPinLevels(mPWMLevel, mLPFPins);
 
-        sleep_us(50000);
+        mLedSet->process(ledSetState);
+
+        sleep_us(5000);
     }
 }
