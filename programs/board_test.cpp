@@ -1,6 +1,7 @@
 #include <board_test.hpp>
 
 #include "pwm_pin.hpp"
+#include "analogue_input.hpp"
 #include "button.hpp"
 
 #include "led_set.hpp"
@@ -14,6 +15,9 @@ BoardTest::BoardTest()
 
     mMainLed = std::make_shared<PWMPin>(PICO_DEFAULT_LED_PIN);
     // mLedSet = std::make_shared<LedSet>(mLedPins);
+
+    mHallSensor = std::make_shared<AnalogueInput>(28);
+    // mVariableResistor = std::make_shared<AnalogueInput>(26);
     
     // mLedPins[1] = std::make_shared<PWMPin>(18); //red
     // mLedPins[2] = std::make_shared<PWMPin>(19); //yellow
@@ -115,10 +119,12 @@ void BoardTest::run()
             }
         }
 
-        setLedPinLevels(mPWMLevel, mLedPins);
-
+        mMainLed->setValue(mPWMLevel);
         mLedSet->process(ledSetState);
+        const float conversion_factor = 3.3f / (1 << 12);
+        uint16_t result =  mHallSensor->getValue();
+        printf("ADC %hu: 0x%03x    voltage: %f\n", mHallSensor->getPin(), result, result * conversion_factor);
 
-        sleep_us(5000);
+        sleep_us(500000);
     }
 }

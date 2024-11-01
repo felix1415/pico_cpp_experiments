@@ -15,6 +15,11 @@ class IOPin
         virtual void setValue(const std::uint16_t value) = 0;
         virtual std::uint16_t getValue() = 0;
 
+        std::uint16_t getPin() const
+        {
+            return mPinNumber;
+        }
+
     protected:
         const std::uint16_t mPinNumber;
 };
