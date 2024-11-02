@@ -11,12 +11,19 @@
 enum LedSetting : std::uint8_t
 {
     ALL_OFF = 0,
-    FLASH_RED = 1,
+    ERROR = 1,
     ALL_ON = 255,
 };
 
-#define SHORT_FLASH_LENGTH_US 50000
-#define LONG_FLASH_LENGTH_US 300000
+enum LedColor : std::uint8_t
+{
+    RED = 0,
+    YELLOW = 1,
+    GREEN = 2,
+};
+
+#define SHORT_DELAY_LENGTH_US 500000
+#define LONG_DELAY_LENGTH_US 300000
 
 class LedSet : public IOSet
 {
@@ -31,9 +38,14 @@ class LedSet : public IOSet
     private:
         void all_on();
         void all_off();
-        void short_flash_red();
+        void pin_on(const std::uint8_t pin);
+        void pin_off(const std::uint8_t pin);
+        void short_flash_pin(const std::uint8_t pin);
+        void long_flash_pin(const std::uint8_t pin);
 
-        std::uint16_t mState;
-        std::uint64_t mProcessTime;
+        std::uint8_t mState;
+        std::uint64_t mCurrentTime;
+        std::uint64_t mTimeShortDelay;
+        std::uint64_t mTimeLongDelay;
 
 };

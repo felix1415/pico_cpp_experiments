@@ -2,6 +2,8 @@
 
 #include "pwm_pin.hpp"
 #include "analogue_input.hpp"
+#include "digital_output.hpp"
+#include "digital_input.hpp"
 #include "button.hpp"
 
 #include "led_set.hpp"
@@ -11,8 +13,6 @@
 
 BoardTest::BoardTest()
 {
-    stdio_init_all();
-
     mMainLed = std::make_shared<PWMPin>(PICO_DEFAULT_LED_PIN);
     // mLedSet = std::make_shared<LedSet>(mLedPins);
 
@@ -23,16 +23,29 @@ BoardTest::BoardTest()
     // mLedPins[2] = std::make_shared<PWMPin>(19); //yellow
     // mLedPins[3] = std::make_shared<PWMPin>(20); //green
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 3; ++i) 
+    {
         //18,19,20
-        mLedPins.push_back(std::make_shared<PWMPin>(18 + i));
-    }
-    for (int i = 0; i < mLPFPins.size(); ++i) {
-        //0,2,4,6
-        mLPFPins[i] = std::make_shared<PWMPin>(i*2);
+        mLedPins.push_back(std::make_shared<DigitalOutput>(18 + i));
     }
 
     mLedSet = std::make_shared<LedSet>(mLedPins);
+
+    for (int i = 0; i < 4; ++i) 
+    {
+        //0,2,4,6
+        mLPFPins.push_back(std::make_shared<PWMPin>(i*2));
+    }
+
+    mInputPins.push_back(std::make_shared<DigitalInput>(7));
+    mInputPins.push_back(std::make_shared<DigitalInput>(9));
+    mInputPins.push_back(std::make_shared<DigitalInput>(10));
+    mInputPins.push_back(std::make_shared<DigitalInput>(12));
+
+    // 0 - 10
+    // 2 - 12
+    // 4 - 7
+    // 6 - 9
 }
 
 BoardTest::~BoardTest()
@@ -46,85 +59,114 @@ BoardTest::~BoardTest()
     }
 }
 
-void BoardTest::setLedPinLevels(const std::uint16_t value, auto& pins)
+void BoardTest::setup()
 {
-    mMainLed->setValue(value);
-    // for (int i = 0; i < pins.size(); ++i) {
-    //     pins[i]->setValue(value);
-    // }
+    mLedSet->process(LedSetting::ALL_OFF);
+
+    for (int i = 0; i < mLPFPins.size(); ++i) {
+        printf("mLPFPins PIN NUMBER %hu", i);
+        mLPFPins[i]->setValue(0);
+    }
 }
 
 void BoardTest::run()
 {
     mRunning.store(true);
 
-    Button digitalModeButton = Button(16);
-    Button stickyButton = Button(17);
+    Button edgeButton = Button(16);
+    Button cornerButton = Button(17);
 
-    std::uint8_t ledSetState = LedSetting::ALL_OFF;
+    std::uint8_t ledSetState = LedSetting::ERROR;
 
-    while (mRunning) {
-        if(digitalModeButton.getState() == BUTTON_STATE::PRESS)
+    //this will delay the start by 3 seconds
+    setup();
+
+    while (mRunning) 
+    {
+        BUTTON_STATE edgeButtonState = edgeButton.getState();
+        BUTTON_STATE cornerButtonState = cornerButton.getState();
+
+        if(edgeButtonState == BUTTON_STATE::PRESS)
         {
-            if(LedSetting::ALL_OFF != ledSetState)
-            {
-                ledSetState = LedSetting::ALL_OFF;
+            printf("edge button PRESS\n");
+            for (int i = 0; i < mLPFPins.size(); ++i) {
+                printf("mLPFPins PIN NUMBER %hu", i);
             }
-            else if(LedSetting::ALL_ON != ledSetState)
-            {
-                ledSetState = LedSetting::ALL_ON;
-            }
-
-            mDigitalMode = !mDigitalMode;
-            mStickyOn = false;
-            mLastSwitchTime = time_us_64();   
+            mLPFPins[2]->setValue(std::numeric_limits<uint16_t>::max());
         }
 
-        if(stickyButton.getState() == BUTTON_STATE::PRESS)
+        if(edgeButtonState == BUTTON_STATE::RELEASE)
         {
-            mStickyOn = !mStickyOn;
-            if(!mDigitalMode)
+            printf("edge button released\n");
+            for(const auto & pin : mInputPins)
             {
-                printf("mPWMLevel value: %d", mPWMLevel);
-            }
-        }
-
-        if(!mStickyOn && mDigitalMode)
-        {
-            if(time_us_64() < mLastSwitchTime + mDigitalModeDuration)
-            {
-                if(mPinHigh)
+                if(pin->getValue())
                 {
-                    mPWMLevel = 65535;
-                }
-                else
-                {
-                    mPWMLevel = 0;
+                    printf("digital input for pin high %hu     %hu \n", mLPFPins[2]->getPin(), pin->getPin());
                 }
             }
-            else
-            {
-                mPWMLevel = 0;
-                mPinHigh = !mPinHigh;
-                mLastSwitchTime = time_us_64();
-            }
+            mLPFPins[2]->setValue(0);
         }
-        else if(!mDigitalMode)
+
+        if(cornerButtonState == BUTTON_STATE::PRESS)
         {
-            mPWMLevel++;
-
-            if(mPWMLevel == 65535)
-            {
-                mPWMLevel = 0;
-            }
+            printf("corner button pressed\n");
+            mLPFPins[3]->setValue(std::numeric_limits<uint16_t>::max());
         }
 
-        mMainLed->setValue(mPWMLevel);
+        if(cornerButtonState == BUTTON_STATE::RELEASE)
+        {
+            printf("corner button released\n");
+
+            // for (int i = 0; i < mLPFPins.size(); ++i) {
+            //     printf("TEST %hu   %hu  \n", mLPFPins[i]->getPin(), mLPFPins[i]->getValue());
+            // }
+            for(const auto & pin : mInputPins)
+            {
+                if(pin->getValue())
+                {
+                    printf("digital input for pin high %hu     %hu \n", mLPFPins[3]->getPin(), pin->getPin());
+                }
+            }
+            mLPFPins[3]->setValue(0);
+        }
+
+
+        // if(!mStickyOn && mDigitalMode)
+        // {
+        //     if(time_us_64() < mLastSwitchTime + mDigitalModeDuration)
+        //     {
+        //         if(mPinHigh)
+        //         {
+        //             mPWMLevel = 65535;
+        //         }
+        //         else
+        //         {
+        //             mPWMLevel = 0;
+        //         }
+        //     }
+        //     else
+        //     {
+        //         mPWMLevel = 0;
+        //         mPinHigh = !mPinHigh;
+        //         mLastSwitchTime = time_us_64();
+        //     }
+        // }
+        // else if(!mDigitalMode)
+        // {
+        //     mPWMLevel++;
+
+        //     if(mPWMLevel == 65535)
+        //     {
+        //         mPWMLevel = 0;
+        //     }
+        // }
+
+        // mMainLed->setValue(mPWMLevel);
         mLedSet->process(ledSetState);
-        const float conversion_factor = 3.3f / (1 << 12);
-        uint16_t result =  mHallSensor->getValue();
-        printf("ADC %hu: 0x%03x    voltage: %f\n", mHallSensor->getPin(), result, result * conversion_factor);
+        // const float conversion_factor = 3.3f / (1 << 12);
+        // uint16_t result =  mHallSensor->getValue();
+        // printf("ADC %hu: 0x%03x    voltage: %f\n", mHallSensor->getPin(), result, result * conversion_factor);
 
-        sleep_us(500000);
     }
 }

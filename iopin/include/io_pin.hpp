@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 
 class IOPin
 {
@@ -8,6 +9,7 @@ class IOPin
         IOPin(const std::uint16_t pin):
         mPinNumber(pin)
         {
+            printf("IOPin created on GPIO %hu \n", mPinNumber);
         }
 
         virtual ~IOPin() {}
