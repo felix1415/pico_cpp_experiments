@@ -84,12 +84,14 @@ BUTTON_STATE Button::getState()
     {
         if(mState != BUTTON_STATE::RELEASE && mState != BUTTON_STATE::NO_PRESS)
         {
+            mLastPressTime = 0;
             mLastReleaseTime = mCurrentTime;
-            // printf("RELEASE  %llu   %llu\n", mLastPressTime, mLastReleaseTime);
+            printf("RELEASE  %llu   %llu\n", mLastPressTime, mLastReleaseTime);
             mState = BUTTON_STATE::RELEASE;
         }
         else
         {
+            // printf("NO_PRESS  %llu   %llu\n", mLastPressTime, mLastReleaseTime);
             mState = BUTTON_STATE::NO_PRESS;
         }
     }
